@@ -1,25 +1,35 @@
-name: Deploy Static Website to S3
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Static Website Hosting using S3 (bucket: twentyseven)
 
-on:
-  push:
-    branches:
-      - main
+Resources:
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  MyWebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: twentyseven   # must be globally unique
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref MyWebsiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PublicReadAccess
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "${MyWebsiteBucket.Arn}/*"
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AKIA3C2RJ3BYFBEU456M }}
-          aws-secret-access-key: ${{ secrets.tSJfAYR/9AgIIwDMdJx2Bis6S2xVdGRVrOG8AIu+}}
-          aws-region: us-east-2
+Outputs:
 
-      - name: Deploy to S3
-        run: |
-          aws s3 sync . s3://twentyseven --delete
+  WebsiteURL:
+    Description: URL of the static website
+    Value: !GetAtt MyWebsiteBucket.WebsiteURL
+
+  BucketName:
+    Description: Name of the S3 bucket
+    Value: !Ref MyWebsiteBucket
